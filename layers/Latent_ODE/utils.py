@@ -176,17 +176,14 @@ def cut_out_timepoints(data, time_steps, mask, n_points_to_cut = None):
 
 
 def get_device(tensor):
-	device = torch.device("cuda:0")
-	if tensor.is_cuda:
-		device = tensor.get_device()
-	return device
+	return tensor.device
 
 def sample_standard_gaussian(mu, sigma):
-	device = get_device(mu)
+	device = mu.device
 
-	d = torch.distributions.normal.Normal(torch.Tensor([0.]).to(device), torch.Tensor([1.]).to(device))
+	d = torch.distributions.normal.Normal(torch.tensor([0.0], device=device), torch.tensor([1.0], device=device))
 	r = d.sample(mu.size()).squeeze(-1)
-	return r * sigma.float() + mu.float()
+	return r * sigma.to(device=device, dtype=torch.float32) + mu.to(device=device, dtype=torch.float32)
 
 
 def split_train_test(data, train_fraq = 0.8):
