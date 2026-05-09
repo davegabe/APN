@@ -73,7 +73,7 @@ class VAE_Baseline(nn.Module):
 
         #print("get_reconstruction done -- computing likelihood")
         fp_mu, fp_std, fp_enc = info["first_point"]
-        fp_std = fp_std.abs()
+        fp_std = self._sanitize_scale(fp_std)
         fp_distr = Normal(fp_mu, fp_std)
 
         assert(torch.sum(fp_std < 0) == 0.)
@@ -182,7 +182,7 @@ class VAE_Baseline(nn.Module):
 
         #print("get_reconstruction done -- computing likelihood")
         fp_mu, fp_std, fp_enc = info["first_point"]
-        fp_std = fp_std.abs()
+        fp_std = self._sanitize_scale(fp_std)
         fp_distr = Normal(fp_mu, fp_std)
 
         assert(torch.sum(fp_std < 0) == 0.)
@@ -260,6 +260,12 @@ class VAE_Baseline(nn.Module):
             results["label_predictions"] = info["label_predictions"].detach()
 
         return results
+
+    @staticmethod
+    def _sanitize_scale(scale: torch.Tensor, eps: float = 1e-6) -> torch.Tensor:
+        # Normal requires finite, strictly positive scale values.
+        scale = torch.nan_to_num(scale, nan=eps, posinf=1e6, neginf=eps)
+        return scale.abs().clamp_min(eps)
 
 
 
