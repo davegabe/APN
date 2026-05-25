@@ -89,13 +89,17 @@ class IMTS_SubModel(nn.Module):
         self.te_scale = nn.Linear(1, 1)
         self.te_periodic = nn.Linear(1, self.te_dim - 1)
 
+        # After joint (context+horizon) normalization in _base_apn.py, context
+        # timestamps span [0, (L-1)/(L+H-1)] rather than [0, 1].  Initialise
+        # patch boundaries to match that range so all P patches receive signal.
+        context_history = (configs.seq_len - 1) / (configs.seq_len + configs.pred_len - 1)
         self.patching = AttentionPatchAggregation(
             N=self.N,
             P=self.P,
             S=None,
             te_dim=self.te_dim,
             hid_dim=self.hid_dim,
-            history=1.0,
+            history=context_history,
             dropout_rate=self.dropout_rate
         )
 
